@@ -107,9 +107,9 @@ public class Commands {
             //"ex1010",
             //"intb",
             //"max1024",
-            "misex",
+            "misex"
             //"sao2",
-            "t481"
+            //"t481"
     );
     
     public Commands() {
@@ -2782,11 +2782,53 @@ public class Commands {
     public void Foo8() throws IOException, Exception {
 
 
+        CellLibrary cellLib = new CellLibrary("genlibs/asap7_RVT_TT_ccs_ABC.genlib");
+        //CellLibrary cellLib = new CellLibrary("genlibs/AND_INV_asap7_RVT_TT_ccs_ABC.genlib");
+
+        //ProbCircuit goldenCircuit = new CircuitFactory(cellLib, "EXPERIMENTO-C17/c17_from_bench_asap7.v").getProbCircuit();
+        //ProbCircuit goldenCircuit = new CircuitFactory(cellLib, "EXPERIMENTO-C17/c17_from_bench_OUT_1_asap7.v").getProbCircuit();
+        //ProbCircuit goldenCircuit = new CircuitFactory(cellLib, "EXPERIMENTO-C17/c17_from_bench_OUT_1_AIG_SIMULATED.v").getProbCircuit();
+
+        String[] circuits = {"EXPERIMENTO-C17/c17_from_bench_OUT_0_asap7.v",
+                            "EXPERIMENTO-C17/c17_from_bench_OUT_0_asap7_CRIT_APPROX.v",
+                            "EXPERIMENTO-C17/c17_from_bench_OUT_0_asap7_RELIABLE_APPROX.v",
+                            "EXPERIMENTO-C17/c17_from_bench_OUT_1_asap7.v",
+                            "EXPERIMENTO-C17/c17_from_bench_OUT_1_asap7_CRIT_APPROX.v",
+                            "EXPERIMENTO-C17/c17_from_bench_OUT_1_asap7_RELIABLE_APPROX.v"};
+
+        for(String circuit : circuits) {
+            ProbCircuit goldenCircuit = new CircuitFactory(cellLib, circuit).getProbCircuit();
+
+            SPRController sprGold = new SPRController(goldenCircuit, cellLib);
+
+            System.out.println(circuit + " --> " + CommonOps.getMTBFBigInt(sprGold.getReliability()));
+        }
+
+
+
+        stopTime();
+
+        /**
+         * 2024-01 Experimento com matrizes de confiabilidade aproximadas
+         */
+
+        /*String customLibPath = "genlibs/AIG_custom_lib.txt";
+        //String customLibPath = "genlibs/AIG_custom_lib_TESTE.txt";
+
+        CustomMatrixLibrary cMatrixLib = new CustomMatrixReader(customLibPath).getcMatrixLib();
+
+        //ArrayList<InputVector> list = ShellScriptOps.getOrderedInputVectorsReliability(goldenCircuit, cellLib, false);
+        ArrayList<InputVector> list = ShellScriptOps.getOrderedInputVectorsReliabilityCustomLib(goldenCircuit, cellLib, cMatrixLib, false);
+
+        for(InputVector in : list) {
+            System.out.println(in + " --> " + in.getDoubleReliability());
+        }*/
+
         /**
          * 2023-10-11 Experimento para tentar entender o método PGM
          */
 
-
+        /*
         CellLibrary cellLib = new CellLibrary("genlibs/basic.genlib");
 
         ProbCircuit goldenCircuit = new CircuitFactory(cellLib, "c17_six_nand.v").getProbCircuit();
@@ -2817,10 +2859,12 @@ public class Commands {
 
         System.out.println("Conf media dos vetores: " + bigCounter.divide(new BigDecimal("32")));
 
-
+        */
         /**
          * C17 six-nanded PTMM per input vector analysis
          */
+
+        /*
         goldenCircuit = new CircuitFactory(cellLib, "c17_six_nand.v").getProbCircuit();
 
         PTMMController ptmmC = new PTMMController(goldenCircuit, cellLib);
@@ -2920,34 +2964,25 @@ public class Commands {
                 }               
             }
             
-            /*
-            ** Coloca 0.5 nas probabilidades de 0 e 1 corretos nos sinais de entrada
-            */
+
             pCircuit.setDefaultProbSourceSignalMatrix();            
-            
-            /*
-            ** Coloca as matrizes PTM nas portas, somente se essa ainda não tiver setada
-            */
+
             pCircuit.setPTMsReliabilityMatrix();
             
             System.out.println("SPR Schivittz: " + SPROps.getSPRReliability(pCircuit));
             
-            /*
-            ** Seta "null" nas matrizes dos sinais
-            */
+
             pCircuit.clearProbSignalsMatrix();
             
             pCircuit.setDefaultProbSourceSignalMatrix();            
-            
-            /*
-            ** Seta "null" nas matrizes de confiabilidade das portas
-            */
+
             pCircuit.clearProbGatesReliabilitiesMatrix();
             pCircuit.setPTMsReliabilityMatrix();
             
             System.out.println("SPR Normal:    " + SPROps.getSPRReliability(pCircuit));
             System.out.println("");
         }
+        */
     }
     
     
@@ -3835,8 +3870,11 @@ public class Commands {
 
                 ArrayList<java.nio.file.Path> subCircuits = new ArrayList<>();
 
+                //More reliables
+                Files.list(Paths.get(String.format("%s/%s/%s_just_crit_reliables_multi_output/verilog", resultPath, circuitName, circuitName))).sorted().forEach(path -> subCircuits.add(path));
+
                 //Multi-output
-                Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output/verilog", resultPath, circuitName, circuitName))).sorted().forEach(path -> subCircuits.add(path));
+                //Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output/verilog", resultPath, circuitName, circuitName))).sorted().forEach(path -> subCircuits.add(path));
 
                 //Per-output
                 //Files.list(Paths.get(String.format("%s/%s/%s_just_crit_per_output/verilog", resultPath, circuitName, circuitName))).sorted().forEach(path -> subCircuits.add(path));
@@ -3955,12 +3993,19 @@ public class Commands {
                 subCircuitsPLA.add(Paths.get(String.format("%s/seeds/pla/%s_ESPRESSO.pla", mainlyPath, benchName)));
 
 
-                //Multi-output
-                Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output/pla", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
+                //Reliables
+                Files.list(Paths.get(String.format("%s/%s/%s_just_crit_reliables_multi_output/pla", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
                     if(path.toString().toLowerCase().contains("espresso")) {
                         subCircuitsPLA.add(path);
                     }
                 });
+
+                //Multi-output
+                /*Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output/pla", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
+                    if(path.toString().toLowerCase().contains("espresso")) {
+                        subCircuitsPLA.add(path);
+                    }
+                });*/
 
                 /*//Per-output
                 Files.list(Paths.get(String.format("%s/%s/%s_just_crit_per_output/pla", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
@@ -4043,12 +4088,21 @@ public class Commands {
                 //Seed
                 subCircuitsAIG.add(Paths.get(String.format("%s/seeds/aig/%s.aig", mainlyPath, benchName)));
 
-                //Multi-output
-                Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output/aig", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
+
+
+                //Reliables
+                Files.list(Paths.get(String.format("%s/%s/%s_just_crit_reliables_multi_output/aig", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
                     if(!path.toString().toLowerCase().contains("stats")) {
                         subCircuitsAIG.add(path);
                     }
                 });
+
+                //Multi-output
+                /*Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output/aig", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
+                    if(!path.toString().toLowerCase().contains("stats")) {
+                        subCircuitsAIG.add(path);
+                    }
+                });*/
 
                 //Multi-output - BITFLIP
                 /*Files.list(Paths.get(String.format("%s/%s/%s_just_crit_multi_output_bitflip/aig", resultPath, circuitName, circuitName))).sorted().forEach(path -> {
@@ -4078,8 +4132,8 @@ public class Commands {
                     }
                 });*/
 
-                /*//ALSRAC
-                Files.list(Paths.get(String.format("%s/%s/alsrac/aig", resultPath, circuitName))).sorted().forEach(path -> {
+                //ALSRAC
+                /*Files.list(Paths.get(String.format("%s/%s/alsrac/aig", resultPath, circuitName))).sorted().forEach(path -> {
                     if(!path.toString().toLowerCase().contains("stats")) {
                         subCircuitsAIG.add(path);
                     }
@@ -4157,6 +4211,7 @@ public class Commands {
         String mainlyPath = "CIRCUITOS-AMMES-MANSKE";
         String resultPath = String.format("%s/results", mainlyPath);
         String genlibPath = "genlibs/asap7_RVT_TT_ccs_ABC.genlib";
+        //String genlibPath = "genlibs/AND_INV_asap7_RVT_TT_ccs_ABC.genlib";
 
         CellLibrary cellLib = new CellLibrary(genlibPath);
         ArrayList<java.nio.file.Path> circuits = new ArrayList<>();
@@ -4232,6 +4287,80 @@ public class Commands {
                 long secondstimestamp = (endTime - startTime2)/1000;
                 // Writer
                 //CriticalVectorsUtils.criticalVectorsExactListToJSON(list, "CIRCUITOS-AMMES-MANSKE/seeds/criticalVectors/apex4_mapA_asap7-RVT-TT-CCS_criticalVectorsEXACTlist.json", secondstimestamp);
+                CriticalVectorsUtils.criticalVectorsExactListToJSON(list, String.format("%s/seeds/criticalVectors/%s_criticalVectors.json", mainlyPath, circuitName), (System.currentTimeMillis() - startTime2)/1000);
+                String timeConsup = "## TIME CONSUPTION CRITICAL TO JSON ## ==> " + secondstimestamp + " secs";
+                System.out.println(timeConsup);
+
+            } else {
+                System.out.println("EXCEPTION: " + p.toString());
+            }
+
+
+        }
+
+        final long wholeProcessEndTime = System.currentTimeMillis();
+        long secondstimestamp = (wholeProcessEndTime - startTime)/1000;
+        String timeConsup = "## TIME CONSUPTION ## ==> " + secondstimestamp + " secs";
+        System.out.println(timeConsup);
+    }
+
+    public void GloriaAnalysis(String[] args) throws Exception {
+
+        String circuitPath = args[0];
+        String genlibPath = args[1];
+        String customLibPath = args[2];
+
+        CellLibrary cellLib = new CellLibrary(genlibPath);
+        CustomMatrixLibrary cMatrixLib = new CustomMatrixReader(customLibPath).getcMatrixLib();
+
+        ProbCircuit pCircuit = new CircuitFactory(cellLib, circuitPath).getProbCircuit();
+
+        SPRController spr = new SPRController(pCircuit,
+                cellLib, cMatrixLib);
+
+        System.out.println(CommonOps.getMTBFBigInt(spr.getReliabilityCustomLib()));
+    }
+
+
+    public void  MakeExaustiveCriticalVectorsToJSONCustomLib() throws Exception {
+
+        final long startTime = System.currentTimeMillis();
+
+        //Parameters
+        String mainlyPath = "CIRCUITOS-AMMES-MANSKE";
+        String resultPath = String.format("%s/results", mainlyPath);
+        String genlibPath = "genlibs/AND_INV_asap7_RVT_TT_ccs_ABC.genlib";
+        String customLibPath = "genlibs/AIG_custom_lib.txt";
+
+        CellLibrary cellLib = new CellLibrary(genlibPath);
+        CustomMatrixLibrary cMatrixLib = new CustomMatrixReader(customLibPath).getcMatrixLib();
+
+        ArrayList<java.nio.file.Path> circuits = new ArrayList<>();
+
+        Files.list(Paths.get(String.format("%s/seeds/verilog", mainlyPath))).sorted().forEach(path -> circuits.add(path));
+
+        for(Path p : circuits) {
+
+            //Verify if current circuit is in exception list
+            boolean flagException = false;
+            for (String ex : circuit_exceptions) {
+                if(p.toString().toLowerCase().contains(ex)) {
+                    flagException = true;
+                    System.out.println(ex);
+                }
+            }
+
+            if(!flagException) {
+
+                String circuitName = p.getFileName().toString().split(".v")[0];
+                ProbCircuit exactSeedCircuit = new CircuitFactory(cellLib, p.toString()).getProbCircuit();
+
+                final long startTime2 = System.currentTimeMillis();
+                ArrayList<InputVector> list = ShellScriptOps.getOrderedInputVectorsReliabilityCustomLib(exactSeedCircuit, cellLib, cMatrixLib, false);
+
+                final long endTime = System.currentTimeMillis();
+                long secondstimestamp = (endTime - startTime2)/1000;
+                // Writer
                 CriticalVectorsUtils.criticalVectorsExactListToJSON(list, String.format("%s/seeds/criticalVectors/%s_criticalVectors.json", mainlyPath, circuitName), (System.currentTimeMillis() - startTime2)/1000);
                 String timeConsup = "## TIME CONSUPTION CRITICAL TO JSON ## ==> " + secondstimestamp + " secs";
                 System.out.println(timeConsup);
@@ -4334,6 +4463,7 @@ public class Commands {
         //Parameters
         String mainlyPath = "CIRCUITOS-AMMES-MANSKE";
         String resultPath = String.format("%s/results", mainlyPath);
+        //Path gentlibPath = Paths.get("genlibs/asap7_RVT_TT_ccs_ABC.genlib");
         Path gentlibPath = Paths.get("genlibs/asap7_RVT_TT_ccs_ABC.genlib");
 
 
@@ -4399,10 +4529,12 @@ public class Commands {
                                     gentlibPath.toString(),
                                     String.format("%s/verilog/%s", p.getParent().getParent().toString(), verilogName)));
 
+
                     //Creates circuits main folder
                     File mainCircuitFolder = new File(String.format("%s/%s", resultPath, verilogName.replace(".v", "")));
                     String mainCircuitFolderPath = mainCircuitFolder.getAbsolutePath();
                     mainCircuitFolder.mkdir();
+
                 }
 
                 System.out.println(plaName + " done!!");
@@ -4416,42 +4548,19 @@ public class Commands {
 
         long secondstimestamp = (endTime - startTime)/1000;
 
-        String timeConsup = "## TIME CONSUPTION ## ==> " + secondstimestamp + " secs";
-        System.out.println(timeConsup);
-
         if(makeEspressoAigBlifVerilog) {
             this.MakeExaustiveTruthTableToJSON();
             this.MakeExaustiveCriticalVectorsToJSON();
+            //this.MakeExaustiveCriticalVectorsToJSONCustomLib();
         }
 
-        //this.MakeExactJustCritApprox();
-
+        String timeConsup = "## TIME CONSUPTION ## ==> " + secondstimestamp + " secs";
+        System.out.println(timeConsup);
     }
 
     public void MakeExactJustCritApprox() throws Exception {
 
         final long startTime = System.currentTimeMillis();
-
-        /*List<String> exceptions = Arrays.asList(
-                                                //"5xp1",
-                                                //"9sym",
-                                                "abc_random_12_1_1244",
-                                                "abc_random_12_1_73",
-                                                "abc_random_12_1_865",
-                                                "alu4",
-                                                //"apex",
-                                                //"b12",
-                                                "clip",
-                                                //"ex1010",
-                                                //"intb",
-                                                //"max1024",
-                                                "misex",
-                                                //"sao2",
-                                                "t481"
-                                                );*/
-
-
-        //ArrayList<Path> circuits = ops.CommonOps.getAllVerilogCircuitsFromPath("CIRCUITOS-AMMES-MANSKE/seeds/verilog");
 
         //Parameters
         String mainlyPath = "CIRCUITOS-AMMES-MANSKE";
@@ -4520,8 +4629,249 @@ public class Commands {
                 //Make approx methods folders
                 ArrayList<String> approxMethodsFoldersNames = new ArrayList<>();
 
-                approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_per_output",
+                /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_per_output",
+                        mainCircuitFolderPath, circuitName));*/
+
+                /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_multi_output",
+                        mainCircuitFolderPath, circuitName));*/
+
+                approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_reliables_multi_output",
                         mainCircuitFolderPath, circuitName));
+
+                /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_multi_output_bitflip",
+                        mainCircuitFolderPath, circuitName));*/
+
+                /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_multi_output_zero",
+                        mainCircuitFolderPath, circuitName));*/
+
+                /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_multi_output_one",
+                        mainCircuitFolderPath, circuitName));*/
+
+                for(String folder : approxMethodsFoldersNames) {
+                    System.out.println(folder);
+                    new File(folder).mkdir();
+                    // make AIG, PLA and VERILOG folder
+                    new File(folder + "/aig").mkdir();
+                    new File(folder + "/pla").mkdir();
+                    new File(folder + "/verilog").mkdir();
+                }
+
+
+                for (String folder : approxMethodsFoldersNames) {
+
+                    String approxCircuitSuffix = Paths.get(folder).getFileName().toString();
+                    String approxMethdod = ApproxOPS.getApproxMethod(approxCircuitSuffix);
+                    boolean isolated = false;
+
+
+                    for(int j = 0; j < percentuals.size(); j++) {
+                        ArrayList<InputVector> vectorsToApprox = new ArrayList<>();
+
+                        if(isolated) {
+                            int whileCounter = 0;
+                            if(approxMethdod.contains("ZERO")) {
+                                while(vectorsToApprox.size() < percentualsVectors.get(j) && criticals.size() > whileCounter) {
+                                    InputVector crit = criticals.get(whileCounter);
+                                    if(crit.getOutputBinaryString().equals("0")) {
+                                        vectorsToApprox.add(crit);
+                                    }
+                                    whileCounter++;
+                                }
+                            } else {
+                                while(vectorsToApprox.size() < percentualsVectors.get(j) && criticals.size() > whileCounter) {
+                                    InputVector crit = criticals.get(whileCounter);
+                                    if(crit.getOutputBinaryString().equals("1")) {
+                                        vectorsToApprox.add(crit);
+                                    }
+                                    whileCounter++;
+                                }
+                            }
+                        } else {
+                            for(int w = 0; w < percentualsVectors.get(j); w++) {
+                                /**
+                                 * More Criticals
+                                 */
+                                //vectorsToApprox.add(criticals.get(w));
+
+                                /**
+                                 * More reliables
+                                 */
+                                int fooFlag = criticals.size() - (w + 1);
+                                vectorsToApprox.add(criticals.get(fooFlag));
+                            }
+                        }
+
+
+                        int length = String.valueOf(exactSeedCircuit.getTotalInputVectors().intValue()).length();
+                        //String percentualStr = Double.toString(percentuals.get(j)).split(",")[1];
+                        String percentualStr = String.format("%.2f", percentuals.get(j)).split(",")[1];
+
+
+
+                        String plaSeedEspressoPath = String.format("%s/seeds/pla/%s_ESPRESSO.pla", mainlyPath, benchName);
+                        String patternName = String.format("%sP---%0" + length + "d-%s", percentualStr, vectorsToApprox.size(), approxCircuitSuffix);
+                        String aigOutput = String.format("%s/aig/%s.aig", folder, patternName);
+                        String verilogOutput = String.format("%s/verilog/%s.v", folder, patternName);
+                        String plaOutput = String.format("%s/pla/%s.pla", folder, patternName);
+                        String plaESPRESSOOutput = String.format("%s/pla/%s_ESPRESSO.pla", folder, patternName);
+                        //String verilogFromPLACircuit = String.format("%s/%s", mainCircuitFolderPath, circuitName+"_fromPLA.v");
+
+                        ApproxOPS.approxMethodWrapper(approxMethdod,
+                                plaSeedEspressoPath,
+                                p.toString(),
+                                genlibPath,
+                                aigOutput,
+                                plaOutput,
+                                plaESPRESSOOutput,
+                                verilogOutput,
+                                false,
+                                vectorsToApprox);
+                    }
+                }
+                System.out.println("-------------");
+                //System.out.println("MAMMAE");
+                //TimeUnit.MINUTES.sleep(660);
+            }
+        }
+
+        final long endTime = System.currentTimeMillis();
+
+        long secondstimestamp = (endTime - startTime)/1000;
+
+        String timeConsup = "## TIME CONSUPTION ## ==> " + secondstimestamp + " secs";
+        System.out.println(timeConsup);
+
+        System.out.println("DONE!");
+        //TimeUnit.MINUTES.sleep(660);
+
+
+
+
+
+        //ProbCircuit exactVerilog = new CircuitFactory(cellLib, "CIRCUITOS-AMMES-MANSKE/seeds/verilog/table5_mapA_asap7-RVT-TT-CCS.v").getProbCircuit();
+
+
+
+
+
+        // Reader
+        //ArrayList<InputVector> vectors = CriticalVectorsUtils.criticalVectorsListFromJSON("testandoUtils.json");
+        //CriticalVectorsExactList criticalObj = CriticalVectorsUtils.criticalVectorsExactListFromJSON("testandoObjCriticalExactlist.json");
+
+        /*Gson gson = new Gson();*/
+        /*JsonWriter jsonWriter = new JsonWriter(new FileWriter("5xp1_inputVectors.json"));*/
+        /*JsonReader jsonReader = new JsonReader(new FileReader("5xp1_inputVectors.json"));*/
+        /*Type listType = new TypeToken<ArrayList<InputVector>>(){}.getType();*/
+
+        /*gson.toJson(vectors, listType, jsonWriter);
+        jsonWriter.close();*/
+
+        /*ArrayList<InputVector> fromJsonList = gson.fromJson(jsonReader, listType);*/
+
+
+
+
+        /*System.out.println("*******************************************");
+
+        System.out.println("OK");
+
+        for(InputVector in : criticalObj.getCriticalVectors()) {
+            System.out.println(in.getBinaryString() + " -*==*-> " + in.getDoubleReliability());
+        }
+
+        System.out.println("Timestamp from criticalObj == " + criticalObj.getSecondsTimeStamp() + "secs");*/
+        /*System.out.println("JSON LIST");
+        System.out.println("----------------------------------------");
+
+        for(InputVector in : fromJsonList) {
+            System.out.println(in.getBinaryString() + " -x-> " + in.getDoubleReliability());
+        }
+*/
+
+        /*exactVerilog = new CircuitFactory(cellLib, "CIRCUITOS-AMMES-MANSKE/seeds/verilog/prom1_mapA_mylib.v").getProbCircuit();
+
+        JeneticsCriticalVectorsSPR criticals = new JeneticsCriticalVectorsSPR(exactVerilog, cellLib);
+        criticals.getCriticalVectors();*/
+
+
+
+
+
+
+    }
+
+    public void MakeTrackCritApproxSequential() throws Exception {
+
+        final long startTime = System.currentTimeMillis();
+
+        //Parameters
+        String mainlyPath = "CIRCUITOS-AMMES-MANSKE";
+        String resultPath = String.format("%s/results", mainlyPath);
+        String genlibPath = "genlibs/AND_INV_asap7_RVT_TT_ccs_ABC.genlib";
+
+        CellLibrary cellLib = new CellLibrary(genlibPath);
+        ArrayList<java.nio.file.Path> circuits = new ArrayList<>();
+
+        Files.list(Paths.get(String.format("%s/seeds/verilog", mainlyPath))).sorted().forEach(path -> circuits.add(path));
+
+        for(Path p : circuits) {
+
+            //Verify if current circuit is in exception list
+            boolean flagException = false;
+            for (String ex : circuit_exceptions) {
+                if(p.toString().toLowerCase().contains(ex)) {
+                    flagException = true;
+                    System.out.println(ex);
+                }
+            }
+            if(!flagException) {
+
+                //Local parameters
+                String circuitName = p.getFileName().toString().split(".v")[0];
+                String genlibName = genlibPath.split("/")[1].replace(".genlib", "");
+                //String benchName = circuitName.split("_")[0];
+                String benchName = circuitName.split("_"+genlibName)[0];
+
+
+                String mainCircuitFolderPath = String.format("%s/%s", resultPath, circuitName);
+
+                String critVectorsPath = String.format("%s/seeds/criticalVectors/%s_criticalVectors.json",
+                        mainlyPath, circuitName);
+
+
+                ArrayList<InputVector> criticals = CriticalVectorsUtils.criticalVectorsExactListFromJSON(critVectorsPath).getCriticalVectors();
+                ProbCircuit exactSeedCircuit = new CircuitFactory(cellLib, p.toString()).getProbCircuit();
+
+
+                System.out.println("O esquema tá aqui!");
+                stopTime();
+
+
+
+                ArrayList<Double> percentuals = new ArrayList<>(Arrays.asList(0.05, 0.1, 0.2, 0.4, 0.6));
+
+
+
+
+
+                ArrayList<Integer> percentualsVectors = new ArrayList<>();
+
+                for(double percentual : percentuals) {
+                    percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * percentual));
+                }
+
+                /*percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * 0.05));
+                percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * 0.1));
+                percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * 0.2));
+                percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * 0.4));
+                percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * 0.8));
+                percentualsVectors.add((int)(exactSeedCircuit.getTotalInputVectors().intValue() * 0.95));*/
+
+                //Make approx methods folders
+                ArrayList<String> approxMethodsFoldersNames = new ArrayList<>();
+
+                /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_per_output",
+                        mainCircuitFolderPath, circuitName));*/
 
                 approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_multi_output",
                         mainCircuitFolderPath, circuitName));
@@ -4535,8 +4885,8 @@ public class Commands {
                 /*approxMethodsFoldersNames.add(String.format("%s/%s_just_crit_multi_output_one",
                         mainCircuitFolderPath, circuitName));*/
 
-
                 for(String folder : approxMethodsFoldersNames) {
+                    System.out.println(folder);
                     new File(folder).mkdir();
                     // make AIG, PLA and VERILOG folder
                     new File(folder + "/aig").mkdir();
@@ -4679,6 +5029,7 @@ public class Commands {
 
 
     }
+
     public void Foo_ISCAS2021() throws Exception {
 
 

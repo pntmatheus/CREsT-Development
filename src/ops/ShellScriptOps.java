@@ -3,9 +3,12 @@ package ops;
 import critical_vectors.CriticalInputVectorComparator;
 import critical_vectors.CriticalVectorsUtils;
 import datastructures.CellLibrary;
+import datastructures.CustomMatrix;
+import datastructures.CustomMatrixLibrary;
 import datastructures.InputVector;
 import manipulator.SPRController;
 import signalProbability.ProbCircuit;
+import tool.Commands;
 import twoLevelDatastructures.PLA;
 import twoLevelDatastructures.PLAManipulator;
 import twoLevelDatastructures.PLAOps;
@@ -396,6 +399,42 @@ public class ShellScriptOps {
             inputV.setOutputBinaryString(bString);
 
             result.add(inputV);
+        }
+
+        CriticalInputVectorComparator comparator = new CriticalInputVectorComparator();
+
+        Collections.sort(result, comparator);
+
+        return result;
+    }
+
+    public static ArrayList<InputVector> getOrderedInputVectorsReliabilityCustomLib(ProbCircuit pCircuit,
+                                                                                    CellLibrary cellLib,
+                                                                                    CustomMatrixLibrary customLib,
+                                                                                    boolean reversed) {
+
+        ArrayList<InputVector> result = new ArrayList<>();
+
+        SPRController spr = new SPRController(pCircuit,
+                cellLib, customLib);
+
+
+        //System.out.println(spr.getReliability("0.999"));
+        //System.out.println(spr.getReliability("0.999999"));
+        //System.out.println(spr.getReliability("0.99999802495"));
+        //System.out.println(spr.getReliabilityCustomLib(customLib));
+
+        for(int i = 0; i < pCircuit.getTotalInputVectors().intValue(); i++) {
+            InputVector inputV = new InputVector(Integer.toString(i), pCircuit.getProbInputs().size());
+            BigDecimal vectorReliability = spr.getReliability(inputV, 15);
+            inputV.setDoubleReliability(vectorReliability.doubleValue());
+
+            ArrayList<Boolean> outputVector = pCircuit.propagateInputVector(inputV);
+            String bString = CriticalVectorsUtils.boolArrayToBinaryString(outputVector);
+            inputV.setOutputBinaryString(bString);
+
+            result.add(inputV);
+
         }
 
         CriticalInputVectorComparator comparator = new CriticalInputVectorComparator();

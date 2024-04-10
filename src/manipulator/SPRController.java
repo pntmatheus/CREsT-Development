@@ -41,6 +41,19 @@ public class SPRController {
         this.cellLib = cLibrary;
         this.verifyInputs();
     }
+
+    public SPRController(ProbCircuit pCircuit,
+                         CellLibrary cLibrary,
+                         CustomMatrixLibrary customLib) {
+        this.pCircuit = pCircuit;
+        this.cellLib = cLibrary;
+        this.cMatrixLib = customLib;
+
+        prepareForSPR(new BigDecimal("0.99999802495"));
+        pCircuit.setCustomMatrix(customLib);
+
+        this.verifyInputs();
+    }
     
     public BigDecimal getReliability() {
         prepareForSPR(new BigDecimal("0.99999802495"));
