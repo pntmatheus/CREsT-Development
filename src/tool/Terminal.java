@@ -68,6 +68,7 @@ TerminalWrapper {
             //cmds.AnalyseSingleOutputApproxVersions();
             //cmds.MakeALSRACBlifResults();
             cmds.GloriaAnalysis(args);
+            System.out.println("test");
 
                 Options options = new Options();
 
